@@ -1,0 +1,6 @@
+<util>: include
+
+<**/*.ml> or <**/*.mli> or <**/*.mly> : use_unix , use_str , package(dynlink,melt.latex,melt)
+<**/*.native> or <**/*.byte>: package(dynlink,melt.latex,melt)
+
+<util/coqdoc.cmxs>: linkall
