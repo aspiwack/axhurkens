@@ -24,17 +24,22 @@ This situation is certainly unsatisfactory, as adapting Hurkens's proof for ever
 As it happens, however, there is a perfectly good axiomatisation of {um} in your favourite dependently typed proof assistant (in actuality, a sufficient subsystem). And the corresponding proof of contradiction is, {foreign"mutatis mutandis"}, Geuvers's, where conversion rules are replaced by equalities.
 "
 
-let axiomatisation = "{chapter"Axiomatic {um}"}
+let axiomatisation = "{chapter"Axiomatic Hurkens's paradox"}
 
-The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
+The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these, commonly called {emph"large"} and {emph"small"}, together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
+
+{section"Axiomatic {um}"}
 
 The full axiomatic presentation appears below, in Coq syntax. It is also part of Coq's distribution and can be found, at the time these notes are being written, in the file {textsf"theories/Logic/Hurkens.v"}.
 
-{displaybox"<@(** *** Large universe *)
-Variable U1 : Type.
-Variable El1 : U1 -> Type.
-(** **** Closure by small product *)
-Variable Forall1 : forall u:U1, (El1 u -> U1) -> U1.
+{paragraph"Large universe"}
+
+{displaybox"<@Variable U1 : Type.
+Variable El1 : U1 -> Type.@>"}
+
+The large universe <@U1@> is closed by dependent products over types in <@U1@>. The definition of dependent product and {lambda}-abstraction are defined using the function space of the dependent type theory. Notations are defined for dependent product, {lambda}-abstraction and application. As usual, an arrow notation is used when the dependent product has a constant range.
+
+{displaybox"<@Variable Forall1 : forall u:U1, (El1 u -> U1) -> U1.
   Notation "'∀₁' x : A , B" := (Forall1 A (fun x => B)).
   Notation "A '⟶₁' B" := (Forall1 A (fun _ => B)).
 Variable lam1 : forall u B, (forall x:El1 u, El1 (B x)) -> El1 (∀₁ x:u, B x).
@@ -42,10 +47,11 @@ Variable lam1 : forall u B, (forall x:El1 u, El1 (B x)) -> El1 (∀₁ x:u, B x)
 Variable app1 : forall u B (f:El1 (Forall1 u B)) (x:El1 u), El1 (B x).
   Notation "f '·₁' x" := (app1 _ _ f x).
 Variable beta1 : forall u B (f:forall x:El1 u, El1 (B x)) x,
-                   (λ₁ y, f y) ·₁ x = f x.
-(** **** Closure by large products *)
-(** [U1] only needs to quantify over itself. *)
-Variable ForallU1 : (U1->U1) -> U1.
+                   (λ₁ y, f y) ·₁ x = f x.@>"}
+
+The large universe <@U1@> is made impredicative by a dependent product with large domain. The standard presentation would use a sort <@U2@>, of which <@U1@> is a member; the dependent product would then have, as a domain, some <@T:U2@>. This would be unnecessary complexity as <@U2@> is so restricted that the only interesting type in it would be <@U1@>. So, instead, we simply restrict the domain of the product to be <@U1@>.
+
+{displaybox"<@Variable ForallU1 : (U1->U1) -> U1.
   Notation "'∀₂' A , F" := (ForallU1 (fun A => F)).
 Variable lamU1 : forall F, (forall A:U1, El1 (F A)) -> El1 (∀₂ A, F A).
   Notation "'λ₂' x , u" := (lamU1 _ (fun x => u)).
@@ -54,28 +60,68 @@ Variable appU1 : forall F (f:El1(∀₂ A,F A)) (A:U1), El1 (F A).
 Variable betaU1 : forall F (f:forall A:U1, El1 (F A)) A,
                     (λ₂ x, f x) ·₁ [ A ] = f A.@>"}
 
-{displaybox"<@(** *** Small universe *)
-(** The small universe is an element of the large one. *)
-Variable u0 : U1.
+{paragraph"Small universe"}
+
+The small universe <@U0@> is an element of the larger one. Therefore we need an <@u0:U1@> and <@U0@> is taken to be <@El1 u0@> rather than a variable.
+
+{displaybox"<@Variable u0 : U1.
 Notation U0 := (El1 u0).
-Variable El0 : U0 -> Type.
-(** **** Closure by small product *)
-(** [U0] does not need reduction rules *)
-Variable Forall0 : forall u:U0, (El0 u -> U0) -> U0.
+Variable El0 : U0 -> Type.@>"}
+
+The small universe <@U0@> is closed by dependent products in <@U0@>. The definitions are symmetric to the corresponding ones of <@U1@>. Notice, however, the lack of {beta}-rule, which is unnecessary to derive a contradiction.
+
+{displaybox"<@Variable Forall0 : forall u:U0, (El0 u -> U0) -> U0.
   Notation "'∀₀' x : A , B" := (Forall0 A (fun x => B)).
   Notation "A '⟶₀' B" := (Forall0 A (fun _ => B)).
 Variable lam0 : forall u B, (forall x:El0 u, El0 (B x)) -> El0 (∀₀ x:u, B x).
   Notation "'λ₀' x , u" := (lam0 _ _ (fun x => u)).
 Variable app0 : forall u B (f:El0 (Forall0 u B)) (x:El0 u), El0 (B x).
-  Notation "f '·₀' x" := (app0 _ _ f x).
-(** **** Closure by large products *)
-Variable ForallU0 : forall u:U1, (El1 u->U0) -> U0.
+  Notation "f '·₀' x" := (app0 _ _ f x).@>"}
+
+The small universe <@U0@> is made impredicative by a dependent whose range is in <@U1@>. Contrary to the impredicative product of <@U1@>, the range cannot be restricted to be only <@U0@>. Here again, the {beta}-rule is not needed.
+
+{displaybox"<@Variable ForallU0 : forall u:U1, (El1 u->U0) -> U0.
   Notation "'∀₀¹' A : U , F" := (ForallU0 U (fun A => F)).
 Variable lamU0 : forall U F, (forall A:El1 U, El0 (F A)) -> El0 (∀₀¹ A:U, F A).
   Notation "'λ₀¹' x , u" := (lamU0 _ _ (fun x => u)).
 Variable appU0 : forall U F (f:El0(∀₀¹ A:U,F A)) (A:El1 U), El0 (F A).
   Notation "f '·₀' [ A ]" := (appU0 _ _ f A).@>"}
-(* *)
+
+{section"Proof of contradiction"}
+
+From there, we can proceed to use Hurkens's argument to derive a contradiction. Let's be precise: we shall prove that every type in <@U0@> is inhabited. It will only be an actual contradiction if <@U0@> contains the empty type. For this purpose, let's assume a type in <@U0@>, we will then prove it is inhabited.
+
+{displaybox"<@Variable F:U0.@>"}
+
+The proof will require simplifying {beta}-redexes. We provide tactics to that effect.
+
+{displaybox"<@Ltac simplify :=
+  (repeat rewrite ?beta1, ?betaU1);
+  lazy beta.
+
+Ltac simplify_in h :=
+  (repeat rewrite ?beta1, ?betaU1 in h);
+  lazy beta in h.@>"}
+
+These tactics are rather brute-force, in that they will {beta}-reduce as much as possible without any particular strategy. On the other hand, they, crucially, don't unfold Coq definitions so that we can give them hints by manually unfolding the appropriate terms to be simplified. Allowing the simplification tactics to unfold Coq definitions turns out to be intractable.
+
+It is traditional to regard <@U1@> as the type of datatypes and <@U0@> as the type of proposition. This view is justified by the fact that <@U0@> is not equipped with {beta}-conversion rules. In the proof, following Geuvers~{cite"Geuvers2007"}, data is explicitly given, while propositions are proved with tactics. Here are the data definitions:
+
+{displaybox"<@Definition V : U1 := ∀₂ A, ((A ⟶₁ u0) ⟶₁ A ⟶₁ u0) ⟶₁ A ⟶₁ u0.
+Definition U : U1 := V ⟶₁ u0.
+
+Definition sb (z:El1 V) : El1 V := λ₂ A, λ₁ r, λ₁ a, r ·₁ (z·₁[A]·₁r) ·₁ a.
+
+Definition le (i:El1 (U⟶₁u0)) (x:El1 U) : U0 :=
+  x ·₁ (λ₂ A, λ₁ r, λ₁ a, i ·₁ (λ₁ v, (sb v) ·₁ [A] ·₁ r ·₁ a)).
+Definition le' : El1 ((U⟶₁u0) ⟶₁ U ⟶₁ u0) := λ₁ i, λ₁ x, le i x.
+Definition induct (i:El1 (U⟶₁u0)) : U0 :=
+  ∀₀¹ x:U, le i x ⟶₀ i ·₁ x.
+
+Definition WF : El1 U := λ₁ z, (induct (z·₁[U] ·₁ le')).
+Definition I (x:El1 U) : U0 :=
+  (∀₀¹ i:U⟶₁u0, le i x ⟶₀ i ·₁ (λ₁ v, (sb v) ·₁ [U] ·₁ le' ·₁ x)) ⟶₀ F
+.@>"}
 "
 
 

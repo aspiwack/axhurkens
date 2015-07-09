@@ -16,6 +16,7 @@ let keywords = [
   "Theorem" ;
   "Fixpoint" ;
   "Inductive" ;
+  "Ltac" ;
   "fun" ;
   "Record" ;
   "Program" ;
