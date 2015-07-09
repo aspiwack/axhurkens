@@ -4,11 +4,79 @@ open Prelude
 ##plugin coqdoc
 ##verbatim '@' = coqdoc
 
+let hole = "[?]"
+let um = ${textrm"U"}^-$
+
+let abstract = "An axiomatisation of Hurkens's paradox in dependent type theory is given without assuming any impredicative feature of said type theory."
+
+let abstract =
+  environment \"abstract\" (T,abstract) T
 
 let intro = "
-<@Definition F := False.@>
+Hurkens's paradox~{cite"Hurkens1995"} is a very economic, though rather hard to understand, paradox of the {um} impredicative type theory, described in Section~{hole}, whose main characteristic is to feature to nested impredicative sorts. Its terseness makes it the weapon of choice to derive inconsistencies from logical principle or experimental language features of your favourite proof assistant. Or, rather, embedding {um} in some way is the weapon of choice, Hurkens's paradox serves as a way to turn this into a proof of false.
+
+It may sound like a futile game to play: if you are the ideal mathematician you will never implement inconsistent feature in your proof assistant. Unfortunately, you are not, and deriving contradiction will happen to you from time to time. Having a tool for that may turn out to be of tremendous help. As a bonus, the inconsistency of {um} can serve to derive potentially useful principles, such as the fact that if the principle of excluded middle holds in an impredicative sort, then types in that sort have the proof irrelevance property (see Section~{hole}).
+
+The downside in all that is that there does not seem to be a good way to express, within dependent type theory, the existence of an impredicative sort. Coquand~{cite"Coquand86"} gave a sufficient condition, albeit much stronger, to derive contradictions in a generic way. His proof was based on Girard's~{cite"Girard1972"} paradox rather than Hurkens's one (which came out ten years later). Geuvers~{cite"Geuvers2007"} later gave a proof based more directly on Hurkens's one and relying on a single impredicative sort, but this proof wasn't very generic. The result was that Hurkens's proof was included {emph"twice"} in the distribution of the Coq proof assistant~{cite"Coq"}: Geuvers's proof, and a variant due to Hugo Herbelin to prove slightly different results.
+
+This situation is certainly unsatisfactory, as adapting Hurkens's proof for every little variation around the same theme is significantly more work than describing an encoding of {um}. It prevents good people from finding perfectly good proof of contradictions: not everyone should be assumed to be an expert in Hurkens's proof.
+
+As it happens, however, there is a perfectly good axiomatisation of {um} in your favourite dependently typed proof assistant (in actuality, a sufficient subsystem). And the corresponding proof of contradiction is, {foreign"mutatis mutandis"}, Geuvers's, where conversion rules are replaced by equalities.
 "
 
+let axiomatisation = "{chapter"Axiomatic {um}"}
+
+The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
+
+The full axiomatic presentation appears below, in Coq syntax. It is also part of Coq's distribution and can be found, at the time these notes are being written, in the file {textsf"theories/Logic/Hurkens.v"}.
+
+{displaybox"<@(** *** Large universe *)
+Variable U1 : Type.
+Variable El1 : U1 -> Type.
+(** **** Closure by small product *)
+Variable Forall1 : forall u:U1, (El1 u -> U1) -> U1.
+  Notation "'∀₁' x : A , B" := (Forall1 A (fun x => B)).
+  Notation "A '⟶₁' B" := (Forall1 A (fun _ => B)).
+Variable lam1 : forall u B, (forall x:El1 u, El1 (B x)) -> El1 (∀₁ x:u, B x).
+  Notation "'λ₁' x , u" := (lam1 _ _ (fun x => u)).
+Variable app1 : forall u B (f:El1 (Forall1 u B)) (x:El1 u), El1 (B x).
+  Notation "f '·₁' x" := (app1 _ _ f x).
+Variable beta1 : forall u B (f:forall x:El1 u, El1 (B x)) x,
+                   (λ₁ y, f y) ·₁ x = f x.
+(** **** Closure by large products *)
+(** [U1] only needs to quantify over itself. *)
+Variable ForallU1 : (U1->U1) -> U1.
+  Notation "'∀₂' A , F" := (ForallU1 (fun A => F)).
+Variable lamU1 : forall F, (forall A:U1, El1 (F A)) -> El1 (∀₂ A, F A).
+  Notation "'λ₂' x , u" := (lamU1 _ (fun x => u)).
+Variable appU1 : forall F (f:El1(∀₂ A,F A)) (A:U1), El1 (F A).
+  Notation "f '·₁' [ A ]" := (appU1 _ f A).
+Variable betaU1 : forall F (f:forall A:U1, El1 (F A)) A,
+                    (λ₂ x, f x) ·₁ [ A ] = f A.@>"}
+
+{displaybox"<@(** *** Small universe *)
+(** The small universe is an element of the large one. *)
+Variable u0 : U1.
+Notation U0 := (El1 u0).
+Variable El0 : U0 -> Type.
+(** **** Closure by small product *)
+(** [U0] does not need reduction rules *)
+Variable Forall0 : forall u:U0, (El0 u -> U0) -> U0.
+  Notation "'∀₀' x : A , B" := (Forall0 A (fun x => B)).
+  Notation "A '⟶₀' B" := (Forall0 A (fun _ => B)).
+Variable lam0 : forall u B, (forall x:El0 u, El0 (B x)) -> El0 (∀₀ x:u, B x).
+  Notation "'λ₀' x , u" := (lam0 _ _ (fun x => u)).
+Variable app0 : forall u B (f:El0 (Forall0 u B)) (x:El0 u), El0 (B x).
+  Notation "f '·₀' x" := (app0 _ _ f x).
+(** **** Closure by large products *)
+Variable ForallU0 : forall u:U1, (El1 u->U0) -> U0.
+  Notation "'∀₀¹' A : U , F" := (ForallU0 U (fun A => F)).
+Variable lamU0 : forall U F, (forall A:El1 U, El0 (F A)) -> El0 (∀₀¹ A:U, F A).
+  Notation "'λ₀¹' x , u" := (lamU0 _ _ (fun x => u)).
+Variable appU0 : forall U F (f:El0(∀₀¹ A:U,F A)) (A:El1 U), El0 (F A).
+  Notation "f '·₀' [ A ]" := (appU0 _ _ f A).@>"}
+(* *)
+"
 
 
 let packages = [
@@ -23,6 +91,7 @@ let prelude = concat_with_sep [
      à l'avenir, en particulier pour configurer le style des liens*)
   command \"usepackage\" [T,"hyperref"] T ;
   input "style.tex";
+  command \"bibliographystyle\" [T,"plain"] T;
 ] par
 
 let title = "Notes on axiomatising Hurkens's Paradox"
@@ -36,7 +105,10 @@ let titling = concat [
 
 let doc = concat [
   titling;
+  abstract;
   intro;
+  axiomatisation;
+  command \"bibliography\" [A,"library"] A;
 ]
 
 let file = \"axhurkens.tex\"

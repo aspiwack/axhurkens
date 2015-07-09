@@ -266,29 +266,6 @@ let quote ?from t =
   (* arnaud: pas de gestion du from *)
   quotation t
 
-(* arnaud:
-(* trick to allow the use of a "quote" label in the [chapter] command. *)
-let _quote = quote
-  *)
-(* Book chapter with quote *)
-
-(* arnaud
-let flushleftright x= block begin
-  unusual_command "flushleftright" [A,nobr,x] A
-end
-  *)
-
-let chapter ?label ~quote ?from title =
-  (* arnaud:
-  let correction = -10. in
-  let correct f = vspace (`Mm f) in
-  let quote = _quote quote ?from in
-  let quote = concat [ correct correction ; quote ; correct (-.correction) ] in
-    *)
-  let from = Option.map sffamily from in
-  let quote = epigraph (sffamily quote) (Option.default empty from) in
-  concat [ Latex.chapter ?label title ; quote ; noindent]
-
 let foreign = emph
 
 let booktitle = emph

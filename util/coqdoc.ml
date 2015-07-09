@@ -4,7 +4,7 @@ open Latex
 open Prelude
 
 let normal_font =  Latex.Verbatim.verbatim
-let ident_font = textsf
+let ident_font = avantgarde
 
 let keywords = [
   "Prop" ;
@@ -73,6 +73,7 @@ let symbols = [
   (* utf8 symbols *)
   "η" , upeta ;
   "ι" , upiota ;
+  "λ" , lambda ;
   "Λ" , lambda_ ;
   "μ" , upmu ;
   "π" , uppi ;
@@ -83,15 +84,18 @@ let symbols = [
   "₀" , mode M(text"_0") ;
   "₁" , mode M(text"_1") ;
   "₂" , mode M(text"_2") ;
+  "¹" , mode M(text"^1") ;
   "⟨" , langle;
   "⟩" , rangle;
   "×" , times ;
+  "∀" , forall ;
+  "⟶" , longrightarrow ;
 
   "--" , mode T (text"--") ;
 ]
 
 let id_apply i = ident_font i
-let kw_apply k = textbf (textsf k)
+let kw_apply k = avantgarde_bold k
 let else_apply s = normal_font s
 
 let idents = ( 

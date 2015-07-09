@@ -97,9 +97,6 @@ val lettrine :
   ?nindent:size ->
   t -> t -> t
 
-(* Book chapter with quote *)
-val chapter : ?label:label -> quote:t -> ?from:t -> t -> t
-
 val quote : ?from:t -> t -> t
 
 (* Box to print math and the like *)
