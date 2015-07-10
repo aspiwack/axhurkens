@@ -118,14 +118,14 @@ let kw_apply k = avantgarde_bold k
 let tkw_apply k = tactic_font k
 let else_apply s = normal_font s
 
-let idents = ( 
+let idents = (
   Str.regexp "_?[a-zA-Z][a-zA-Z0-9]*\\(_[a-zA-Z0-9]+\\)*" ,
   fun s ->
-    try List.assoc s keyword_symbols 
-    with Not_found -> 
+    try List.assoc s keyword_symbols
+    with Not_found ->
       let usplit = Str.split_delim (Str.regexp_string "_") s in
       let escaped = text(String.concat "\\_" usplit) in
-      if List.mem s keywords then 
+      if List.mem s keywords then
         kw_apply escaped
       else if List.mem s tactic_keywords then
         tkw_apply escaped
@@ -133,7 +133,7 @@ let idents = (
 	id_apply escaped
   )
 
-let symbols = 
+let symbols =
   List.map begin fun (s,t) ->
     Str.regexp_string s, fun _ -> t
   end symbols
@@ -159,7 +159,7 @@ let blanklines =
   Str.regexp"[\n]\\([ ]*[\n]\\)+",
   (fun _ -> Latex.newline_size (`Baselineskip 0.5))
 
-let rec print n x = 
+let rec print n x =
   assert (!n>=0);
   if !n = 0 then
     Latex.Verbatim.regexps (blanklines::indent::whitespaces::(open_comments n)::calletters::idents::symbols) else_apply x
@@ -189,7 +189,6 @@ let verbatim_simpleM name : verbatim_function = fun f l ->
   Format.fprintf f "end"
 
 
-let () = 
+let () =
   declare_verbatim_function "coqdoc"
     (verbatim_simpleM "Coqdoc.print")
-
