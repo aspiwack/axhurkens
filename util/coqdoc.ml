@@ -32,6 +32,7 @@ let keywords = [
   "Section";
   "Variable";
   "Variables";
+  "Hypothesis";
   "Let";
   "End";
 

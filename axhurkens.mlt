@@ -4,7 +4,10 @@ open Prelude
 ##plugin coqdoc
 ##verbatim '@' = coqdoc
 
+let s_hurkens = label ()
 let s_uminus = label ()
+let s_sortuniv = label ()
+let s_impredicativesort = label ()
 
 let hole = "[?]"
 let um = ${textrm"U"}^-$
@@ -26,7 +29,7 @@ This situation is certainly unsatisfactory, as adapting Hurkens's proof for ever
 As it happens, however, there is a perfectly good axiomatisation of {um} in your favourite dependently typed proof assistant (in actuality, a sufficient subsystem). And the corresponding proof of contradiction is, {foreign"mutatis mutandis"}, Geuvers's, where conversion rules are replaced by equalities.
 "
 
-let axiomatisation = "{chapter"Axiomatic Hurkens's paradox"}
+let axiomatisation = "{chapter"Axiomatic Hurkens's paradox" ~label:s_hurkens}
 
 The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these, commonly called {emph"large"} and {emph"small"}, together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
 
@@ -46,7 +49,7 @@ The large universe <@U1@> is closed by dependent products over types in <@U1@>. 
   Notation "A '⟶₁' B" := (Forall1 A (fun _ => B)).
 Variable lam1 : forall u B, (forall x:El1 u, El1 (B x)) -> El1 (∀₁ x:u, B x).
   Notation "'λ₁' x , u" := (lam1 _ _ (fun x => u)).
-Variable app1 : forall u B (f:El1 (Forall1 u B)) (x:El1 u), El1 (B x).
+Variable app1 : forall u B (f:El1 (∀₁ x:u, B x)) (x:El1 u), El1 (B x).
   Notation "f '·₁' x" := (app1 _ _ f x).
 Variable beta1 : forall u B (f:forall x:El1 u, El1 (B x)) x,
                    (λ₁ y, f y) ·₁ x = f x.@>"}
@@ -77,7 +80,7 @@ The small universe <@U0@> is closed by dependent products in <@U0@>. The definit
   Notation "A '⟶₀' B" := (Forall0 A (fun _ => B)).
 Variable lam0 : forall u B, (forall x:El0 u, El0 (B x)) -> El0 (∀₀ x:u, B x).
   Notation "'λ₀' x , u" := (lam0 _ _ (fun x => u)).
-Variable app0 : forall u B (f:El0 (Forall0 u B)) (x:El0 u), El0 (B x).
+Variable app0 : forall u B (f:El0 (∀₀ x:u, B x)) (x:El0 u), El0 (B x).
   Notation "f '·₀' x" := (app0 _ _ f x).@>"}
 
 The small universe <@U0@> is made impredicative by a dependent whose range is in <@U1@>. Contrary to the impredicative product of <@U1@>, the range cannot be restricted to be only <@U0@>. Here again, the {beta}-rule is not needed.
@@ -187,7 +190,61 @@ Nothing in this proof is particularly specific to Coq: it could be done in any v
 
 let instances = "{chapter"Applications"}
 
+In this section we will see a few instances of the generic axiomatisation of Hurkens's proof can help derive contradictions. They come from the file {textsf"theories/Logic/Hurkens.v"} of the Coq distribution (version 8.5).
+
+{section"Sorts" ~label:s_sortuniv}
+
+A common implementation of universes is to use a sort of the dependent type theory for a universe of {um}. In that case. <@El@> is just the identity.
+
+{displaybox"<@Variable U := Type.
+Let El := fun X => X.@>"}
+
+For universes defined this way, small products and their {lambda}-abstraction, application and {beta}-rule are defined straightforwardly (<@eq_refl@> is Coq's witness of reflexivity of equality).
+
+{displaybox"<@Let Forall (A:U) (B:A -> U) : U := forall x:A, B x
+Let lam u B (f:forall x:A,B x) := f
+Let app u B (f:forall x:A,B x) (x:A) := f x
+Let beta u B f x : f x = f x := eq_refl@>"}
+
+{section"Impredicative sort" ~label:s_impredicativesort}
+
+Impredicativity, for a sort <@U@>, can also be characterised to some degree. The idea is that there must be a bigger sort <@U'@> which can be projected onto <@U@>. See, for example, the bracketing construction in~{cite"HerbelinSpiwack2013"}. This projection could be implemented, for instance, for Coq's impredicative <@Prop@> sort as <@fun X:Type => forall P:Prop, (X->P)->P@>.
+
+The signature of Section~{ref_ s_sortuniv} is extended with the constraint that <@U'@> is bigger than <@U@> and a projection.
+
+{displaybox"<@Let U' := Type.
+Let U:U' := Type.
+Variable proj : U' -> U.@>"}
+
+With the following laws.
+
+{displaybox"<@Hypothesis proj_unit : forall (A:U'), A -> proj A.
+Hypothesis proj_counit : forall (F:U->U), proj (forall A,F A) -> (forall A,F A).
+Hypothesis proj_coherent : forall (F:U -> U) (f:forall x:U, F x) (x:U),
+                              proj_counit _ (proj_unit _ f) x = f x.@>"}
+
+The <@proj_unit@> law expresses that if <@proj@> generally diminishes the ability to distinguish between elements of <@A:U2@>, it does not lose elements. We don't have a way back from <@proj A@> to <@A@> in general, but <@proj@> forms a monad. The <@proj_unit@> law expresses a small variation on this latter remark.
+
+We can exploit Coq's universe polymorphism (form version 8.5) to turn this section into a generic definition of impredicative sort. Indeed, under the polymorphic interpretation <@Type@> represents an arbitrary type, including the impredicative sort <@Prop@>, which is indeed impredicative in the above sense.
+
+{section"Generalising Geuvers's proof"}
+
+Geuvers~{cite"Geuvers2007"} proves that an impredicative sort <@U1@> cannot be a retract of an <@U0:U1@>. His proof is made for $"<@U1@>"="<@Prop@>"$, but we can instantiate the proof of Section~{ref_ s_hurkens} to obtain the same result for any sort which is impredicative sort in the sense of Section~{ref_ s_impredicativesort}.
+
+{displaybox"<@Let      U2    := Type.
+Let      U1:U2 := Type.
+Variable U0:U1.@>"}
+
+Where <@U1@> is impredicative over <@U2@> as in Section~{ref_ s_impredicativesort}. The retraction is given by the following functions. Only a weak form of retraction is needed were types, in <@U1@> which are ``logically equivalent'' are considered equal.
+
+{displaybox"<@Variable proj0 : U0 -> U1.
+Variable inj0 : U1 -> U0.
+Hypothesis inj0_unit   : forall (b:U1), b -> proj0 (inj0 b).
+Hypothesis inj0_counit : forall (b:U1), proj0 (inj0 b) -> b.@>"}
+
+
 "
+
 let packages = [
   "inputenc" , "utf8" ;
   "fontenc" , "T1" ;
