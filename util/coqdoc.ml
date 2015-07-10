@@ -5,6 +5,7 @@ open Prelude
 
 let normal_font =  Latex.Verbatim.verbatim
 let ident_font = avantgarde
+let tactic_font x = avantgarde (itshape x)
 
 let keywords = [
   "Prop" ;
@@ -34,6 +35,9 @@ let keywords = [
   "Let";
   "End";
 
+  "Proof";
+  "Qed";
+
   "Time";
   "Eval";
 
@@ -41,8 +45,22 @@ let keywords = [
   "Notation";
 ]
 
+let tactic_keywords = [
+  "refine";
+  "exact";
+  "unfold";
+  "intro"; "intros";
+  "assert";
+  "as"; "at";
+  "generalize";
+  "clear";
+  "lazy";
+  "repeat";
+  "rewrite";
+]
+
 let keyword_symbols = [
-  "existstac", ident_font (text"exists");
+  "existstac", tactic_font (text"exists");
   "star" , star
 ]
 
@@ -97,6 +115,7 @@ let symbols = [
 
 let id_apply i = ident_font i
 let kw_apply k = avantgarde_bold k
+let tkw_apply k = tactic_font k
 let else_apply s = normal_font s
 
 let idents = ( 
@@ -107,7 +126,9 @@ let idents = (
       let usplit = Str.split_delim (Str.regexp_string "_") s in
       let escaped = text(String.concat "\\_" usplit) in
       if List.mem s keywords then 
-	kw_apply escaped 
+        kw_apply escaped
+      else if List.mem s tactic_keywords then
+        tkw_apply escaped
       else
 	id_apply escaped
   )

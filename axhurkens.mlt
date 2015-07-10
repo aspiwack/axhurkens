@@ -4,6 +4,8 @@ open Prelude
 ##plugin coqdoc
 ##verbatim '@' = coqdoc
 
+let s_uminus = label ()
+
 let hole = "[?]"
 let um = ${textrm"U"}^-$
 
@@ -13,13 +15,13 @@ let abstract =
   environment \"abstract\" (T,abstract) T
 
 let intro = "
-Hurkens's paradox~{cite"Hurkens1995"} is a very economic, though rather hard to understand, paradox of the {um} impredicative type theory, described in Section~{hole}, whose main characteristic is to feature to nested impredicative sorts. Its terseness makes it the weapon of choice to derive inconsistencies from logical principle or experimental language features of your favourite proof assistant. Or, rather, embedding {um} in some way is the weapon of choice, Hurkens's paradox serves as a way to turn this into a proof of false.
+Hurkens's paradox~{cite"Hurkens1995"} is a very economic, though rather hard to understand, paradox of the {um} impredicative type theory, described in Section~{ref_ s_uminus}, whose main characteristic is to feature to nested impredicative sorts. Its terseness makes it the weapon of choice to derive inconsistencies from logical principle or experimental language features of your favourite proof assistant. Or, rather, embedding {um} in some way is the weapon of choice, Hurkens's paradox serves as a way to turn this into a proof of false.
 
 It may sound like a futile game to play: if you are the ideal mathematician you will never implement inconsistent feature in your proof assistant. Unfortunately, you are not, and deriving contradiction will happen to you from time to time. Having a tool for that may turn out to be of tremendous help. As a bonus, the inconsistency of {um} can serve to derive potentially useful principles, such as the fact that if the principle of excluded middle holds in an impredicative sort, then types in that sort have the proof irrelevance property (see Section~{hole}).
 
 The downside in all that is that there does not seem to be a good way to express, within dependent type theory, the existence of an impredicative sort. Coquand~{cite"Coquand86"} gave a sufficient condition, albeit much stronger, to derive contradictions in a generic way. His proof was based on Girard's~{cite"Girard1972"} paradox rather than Hurkens's one (which came out ten years later). Geuvers~{cite"Geuvers2007"} later gave a proof based more directly on Hurkens's one and relying on a single impredicative sort, but this proof wasn't very generic. The result was that Hurkens's proof was included {emph"twice"} in the distribution of the Coq proof assistant~{cite"Coq"}: Geuvers's proof, and a variant due to Hugo Herbelin to prove slightly different results.
 
-This situation is certainly unsatisfactory, as adapting Hurkens's proof for every little variation around the same theme is significantly more work than describing an encoding of {um}. It prevents good people from finding perfectly good proof of contradictions: not everyone should be assumed to be an expert in Hurkens's proof.
+This situation is certainly unsatisfactory, as adapting Hurkens's proof for every little variation around the same theme is significantly more work than describing an encoding of {um}. It prevents good people from finding perfectly good proof of contradictions: it isn't fair to assume that everyone is an expert in Hurkens's proof.
 
 As it happens, however, there is a perfectly good axiomatisation of {um} in your favourite dependently typed proof assistant (in actuality, a sufficient subsystem). And the corresponding proof of contradiction is, {foreign"mutatis mutandis"}, Geuvers's, where conversion rules are replaced by equalities.
 "
@@ -28,7 +30,7 @@ let axiomatisation = "{chapter"Axiomatic Hurkens's paradox"}
 
 The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these, commonly called {emph"large"} and {emph"small"}, together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
 
-{section"Axiomatic {um}"}
+{section"Axiomatic {um}" ~label:s_uminus}
 
 The full axiomatic presentation appears below, in Coq syntax. It is also part of Coq's distribution and can be found, at the time these notes are being written, in the file {textsf"theories/Logic/Hurkens.v"}.
 
@@ -105,7 +107,7 @@ Ltac simplify_in h :=
 
 These tactics are rather brute-force, in that they will {beta}-reduce as much as possible without any particular strategy. On the other hand, they, crucially, don't unfold Coq definitions so that we can give them hints by manually unfolding the appropriate terms to be simplified. Allowing the simplification tactics to unfold Coq definitions turns out to be intractable.
 
-It is traditional to regard <@U1@> as the type of datatypes and <@U0@> as the type of proposition. This view is justified by the fact that <@U0@> is not equipped with {beta}-conversion rules. In the proof, following Geuvers~{cite"Geuvers2007"}, data is explicitly given, while propositions are proved with tactics. Here are the data definitions:
+It is traditional to regard <@U1@> as the type of datatypes and <@U0@> as the type of proposition. This view is justified by the fact that <@U0@> is not equipped with {beta}-conversion rules. In the proof, following Geuvers~{cite"Geuvers2007"}, data is explicitly given, while propositions are proved with tactics. Here are the data definitions (I'm playing a bit loose here, since I consider propositions to be data, they are according to the above definition at least):
 
 {displaybox"<@Definition V : U1 := ∀₂ A, ((A ⟶₁ u0) ⟶₁ A ⟶₁ u0) ⟶₁ A ⟶₁ u0.
 Definition U : U1 := V ⟶₁ u0.
@@ -122,9 +124,70 @@ Definition WF : El1 U := λ₁ z, (induct (z·₁[U] ·₁ le')).
 Definition I (x:El1 U) : U0 :=
   (∀₀¹ i:U⟶₁u0, le i x ⟶₀ i ·₁ (λ₁ v, (sb v) ·₁ [U] ·₁ le' ·₁ x)) ⟶₀ F
 .@>"}
+
+The proofs follow Geuvers~{cite"Geuvers2007"} as well. The main difference is that we must explicitly call to <@simplify@> where conversion was used implicitly and that standard Coq tactics calls to the <@intro@> and <@apply@> tactics are generally replaced by tactics of the form <@refine (λ₀ x, _)@> and <@refine (h·₀_)@> respectively.
+
+{displaybox"<@Lemma Omega : El0 (∀₀¹ i:U⟶₁u0, induct i ⟶₀ i ·₁ WF).
+Proof.
+  refine (λ₀¹ i, λ₀ y, _).
+  refine (y·₀[_]·₀_).
+  unfold le,WF,induct. simplify.
+  refine (λ₀¹ x, λ₀ h0, _). simplify.
+  refine (y·₀[_]·₀_).
+  unfold le. simplify. unfold sb at 1. simplify. unfold le' at 1. simplify.
+  exact h0.
+Qed.@>"}
+
+{displaybox"<@Lemma lemma1 : El0 (induct (λ₁ u, I u)).
+Proof.
+  unfold induct.
+  refine (λ₀¹ x, λ₀ p, _). simplify.
+  refine (λ₀ q,_).
+  assert (El0 (I (λ₁ v, (sb v)·₁[U]·₁le'·₁x))) as h.
+  { generalize (q·₀[λ₁ u, I u]·₀p). simplify.
+    intros q'. exact q'. }
+  refine (h·₀_).
+  refine (λ₀¹ i,_).
+  refine (λ₀ h', _).
+  generalize (q·₀[λ₁ y, i ·₁ (λ₁ v, (sb v)·₁[U] ·₁ le' ·₁ y)]). simplify.
+  intros q'.
+  refine (q'·₀_). clear q'.
+  unfold le at 1 in h'. simplify_in h'.
+  unfold sb at 1 in h'. simplify_in h'.
+  unfold le' at 1 in h'. simplify_in h'.
+  exact h'.
+Qed.@>"}
+
+{displaybox"<@Lemma lemma2 : El0 ((∀₀¹i:U⟶₁u0, induct i ⟶₀ i·₁WF) ⟶₀ F).
+Proof.
+  refine (λ₀ x, _).
+  assert (El0 (I WF)) as h.
+  { generalize (x·₀[λ₁ u, I u]·₀lemma1). simplify.
+    intros q.
+    exact q. }
+  refine (h·₀_). clear h.
+  refine (λ₀¹ i, λ₀ h0, _).
+  generalize (x·₀[λ₁ y, i·₁(λ₁ v, (sb v)·₁[U]·₁le'·₁y)]). simplify.
+  intros q.
+  refine (q·₀_). clear q.
+  unfold le in h0. simplify_in h0.
+  unfold WF in h0. simplify_in h0.
+  exact h0.
+Qed.@>"}
+
+{displaybox"<@Theorem paradox : El0 F.
+Proof.
+  exact (lemma2·₀Omega).
+Qed.@>"}
+
+The takeaway insight is that because the paradox does not actually make use of the reduction rules in propositions of <@U0@>, using equality to model conversion in these propositions doesn't raise any obstacle to the completion of the proof.
+
+Nothing in this proof is particularly specific to Coq: it could be done in any variant of Martin-Löf type theory, provided that an identity type is available. Of course, the support of Coq for rewriting significantly helps, if your favourite proof assistant doesn't have a similar feature it may be painful to port this generic paradox.
 "
 
+let instances = "{chapter"Applications"}
 
+"
 let packages = [
   "inputenc" , "utf8" ;
   "fontenc" , "T1" ;
@@ -154,6 +217,7 @@ let doc = concat [
   abstract;
   intro;
   axiomatisation;
+  instances;
   command \"bibliography\" [A,"library"] A;
 ]
 
