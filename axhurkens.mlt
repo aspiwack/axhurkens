@@ -388,6 +388,15 @@ Let proj0 (x:U0) : MProp :=
   Contrary to to the case of (strong) excluded middle, we cannot eliminate this last double-negative. So proof irrelevance doesn't follow from weak excluded middle. However, this section proves that weak excluded middle is incompatible with any sort of proof relevance principle. In particular, in Coq lingo, weak excluded middle cannot hold in impredicative <@Set@>, that is an impredicative sort with strong elimination.
 "
 
+let conclusion = "{chapter"Conclusion"}
+
+  The axiomatisation of Hurkens's paradox presented in Section~{ref_ s_hurkens} is very versatile. It can be used, mostly, to prove that some combination of logical principles are incompatible, but also to detect bugs in a dependent-type-theory implementation. Which is a completely fair and healthy activity if you ask this author.
+
+  It is, certainly, an improvement over a situation where each paradox would need a careful redesign of Hurkens's proof to fit the specific premises. In practice it meant that paradoxes were not derived, because the brave paradox-finder didn't have the energy or expertise to translate Hurkens's paradox.
+
+As per the axiomatisation itself. It has the pleasant property of requiring only a subset of {um} where the ``proofs'' of ``propositions'' don't require {beta}-rules or any kind of equality rule. So something was learned. Adapting the proof to the axiomatisation doesn't present any new difficulty, except from controlling rewriting a little. It wasn't discovered before solely by the virtue of nobody looking. The reader who enjoyed this axiomatisation can celebrate the bout of optimism which made me look the right way, and the night I lost over it.
+  "
+
 let packages = [
   "inputenc" , "utf8" ;
   "fontenc" , "T1" ;
@@ -418,6 +427,7 @@ let doc = concat [
   intro;
   axiomatisation;
   instances;
+  conclusion;
   command \"bibliography\" [A,"library"] A;
 ]
 
