@@ -12,7 +12,6 @@ let s_geuvers = label ()
 let s_emirr = label ()
 let s_modal = label ()
 
-let hole = "[?]"
 let um = ${textrm"U"}^-$
 
 let abstract = "An axiomatisation of Hurkens's paradox in dependent type theory is given without assuming any impredicative feature of said type theory."
@@ -23,7 +22,7 @@ let abstract =
 let intro = "
 Hurkens's paradox~{cite"Hurkens1995"} is a very economic, though rather hard to understand, paradox of the {um} impredicative type theory, described in Section~{ref_ s_uminus}, whose main characteristic is to feature to nested impredicative sorts. Its terseness makes it the weapon of choice to derive inconsistencies from logical principle or experimental language features of your favourite proof assistant. Or, rather, embedding {um} in some way is the weapon of choice, Hurkens's paradox serves as a way to turn this into a proof of false.
 
-It may sound like a futile game to play: if you are the ideal mathematician you will never implement inconsistent feature in your proof assistant. Unfortunately, you are not, and deriving contradiction will happen to you from time to time. Having a tool for that may turn out to be of tremendous help. As a bonus, the inconsistency of {um} can serve to derive potentially useful principles, such as the fact that if the principle of excluded middle holds in an impredicative sort, then types in that sort have the proof irrelevance property (see Section~{hole}).
+It may sound like a futile game to play: if you are the ideal mathematician you will never implement inconsistent feature in your proof assistant. Unfortunately, you are not, and deriving contradiction will happen to you from time to time. Having a tool for that may turn out to be of tremendous help. As a bonus, the inconsistency of {um} can serve to derive potentially useful principles, such as the fact that if the principle of excluded middle holds in an impredicative sort, then types in that sort have the proof irrelevance property (see Section~{ref_ s_emirr}).
 
 The downside in all that is that there does not seem to be a good way to express, within dependent type theory, the existence of an impredicative sort. Coquand~{cite"Coquand86"} gave a sufficient condition, albeit much stronger, to derive contradictions in a generic way. His proof was based on Girard's~{cite"Girard1972"} paradox rather than Hurkens's one (which came out ten years later). Geuvers~{cite"Geuvers2007"} later gave a proof based more directly on Hurkens's one and relying on a single impredicative sort, but this proof wasn't very generic. The result was that Hurkens's proof was included {emph"twice"} in the distribution of the Coq proof assistant~{cite"Coq"}: Geuvers's proof, and a variant due to Hugo Herbelin to prove slightly different results.
 
