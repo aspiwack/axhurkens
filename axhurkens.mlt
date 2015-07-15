@@ -225,6 +225,12 @@ Hypothesis proj_coherent : forall (F:U -> U) (f:forall x:U, F x) (x:U),
 
 The <@proj_unit@> law expresses that if <@proj@> generally diminishes the ability to distinguish between elements of <@A:U2@>, it does not lose elements. We don't have a way back from <@proj A@> to <@A@> in general, but <@proj@> forms a monad. The <@proj_unit@> law expresses a small variation on this latter remark.
 
+These properties are sufficient to show that <@U@> is closed by large product. The {beta}-rule, omitted, is easily derived from <@proj_coherent@>.
+
+{displaybox"<@Let ForallU (F:U->U) : U := proj (forall A, F A).
+Let lamU1 F (f:forall A:U, F A) : proj(forall A:U, F A):= proj_unit _ f
+Let appU1 F (f:proj(forall A:U, F A)) (A:U) : F A := proj_counit _ f x.@>"}
+
 We can exploit Coq's universe polymorphism (form version 8.5) to turn this section into a generic definition of impredicative sort. Indeed, under the polymorphic interpretation <@Type@> represents an arbitrary type, including the impredicative sort <@Prop@>, which is indeed impredicative in the above sense.
 
 {section"Generalising Geuvers's proof"}
@@ -235,14 +241,32 @@ Geuvers~{cite"Geuvers2007"} proves that an impredicative sort <@U1@> cannot be a
 Let      U1:U2 := Type.
 Variable U0:U1.@>"}
 
-Where <@U1@> is impredicative over <@U2@> as in Section~{ref_ s_impredicativesort}. The retraction is given by the following functions. Only a weak form of retraction is needed were types, in <@U1@> which are ``logically equivalent'' are considered equal.
+Where <@U1@> is impredicative over <@U2@> as in Section~{ref_ s_impredicativesort}. The retraction is given by the following functions. Only a weak form of retraction is needed were types in <@U1@> which are ``logically equivalent'' are considered equal.
 
 {displaybox"<@Variable proj0 : U0 -> U1.
 Variable inj0 : U1 -> U0.
 Hypothesis inj0_unit   : forall (b:U1), b -> proj0 (inj0 b).
 Hypothesis inj0_counit : forall (b:U1), proj0 (inj0 b) -> b.@>"}
 
+From this (weak) retraction we can define <@El0@> and corresponding products for <@U0@> despite the fact that <@U0@> is not necessarily a sort.
 
+{displaybox"<@Let El0 (u:U0) := proj0 u
+Let Forall0 (u:U0) (B:proj0 u -> U0) : U0 := inj0 (forall x:proj0 u, proj0 (B x))
+Let Lambda0 u B (f:forall x:proj0 u, proj0 (B x))
+   : proj0 (inj0 (forall x:proj0 u, proj0 (B x))) := inj0_unit _ f.
+Let app0 forall u B (f:proj0 (inj0 (forall x:proj0 u, proj0 (B x)))) (x:proj0 u)
+   : proj0 (B x) := inj0_counit _ f x@>"}
+
+Large products are define much the same:
+{displaybox"<@Let Forall0 (u:U1) (B:u -> U0) : U0 := inj0 (forall x:u, proj0 (B x))
+Let Lambda0 u B (f:forall x:u, proj0 (B x))
+   : proj0 (inj0 (forall x:u, proj0 (B x))) := inj0_unit _ f.
+Let app0 forall u B (f:proj0 (inj0 (forall x:u, proj0 (B x)))) (x:u)
+   : proj0 (B x) := inj0_counit _ f x@>"}
+
+From this, the paradox is set up, so we can deduce that every proposition of <@P:U0@> is ``inhabited'' in that $"<@El0 P@>"="<@proj0 P@>"$ is inhabited, and therefore, that every proposition of <@F:U1@> is inhabited since <@inj0 F:U0@> is ``inhabited'' in the sense of <@U0@>, {foreign"i.e."} <@proj0 (inj0 F)@> is inhabited, then <@inj0_counit@> concludes.
+
+Since <@Prop@> is an instance of the signature of Section~{ref_ s_impredicativesort}, we prove, like Geuvers, that <@Prop@> is not a retract of a proposition <@P:Prop@>.
 "
 
 let packages = [
