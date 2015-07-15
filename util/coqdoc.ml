@@ -15,6 +15,7 @@ let keywords = [
   "Definition" ;
   "Lemma" ;
   "Theorem" ;
+  "Remark" ;
   "Fixpoint" ;
   "Inductive" ;
   "Ltac" ;
@@ -35,6 +36,9 @@ let keywords = [
   "Hypothesis";
   "Let";
   "End";
+
+  "Next";
+  "Obligation";
 
   "Proof";
   "Qed";
@@ -58,6 +62,12 @@ let tactic_keywords = [
   "lazy";
   "repeat";
   "rewrite";
+  "destruct";
+  "reflexivity";
+  "contradiction";
+  "apply";
+  "contradiction";
+  "eauto";
 ]
 
 let keyword_symbols = [
@@ -83,8 +93,9 @@ let symbols = [
   "~" , lnot ;
   "/\\" , land_ ;
   "\\/" , lor_ ;
-  "<" , le ;
-  ">" , ge ;
+  "<>" , neq ;
+  "<" , mode M (text"<") ;
+  ">" , mode M (text">") ;
   "*" , mode M(text"*") ;
   "_", mode M(text"\\_") ;
   "++", mode M (text"+\\!\\!\\!+") ;

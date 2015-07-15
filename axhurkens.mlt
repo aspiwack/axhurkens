@@ -8,6 +8,9 @@ let s_hurkens = label ()
 let s_uminus = label ()
 let s_sortuniv = label ()
 let s_impredicativesort = label ()
+let s_geuvers = label ()
+let s_emirr = label ()
+let s_modal = label ()
 
 let hole = "[?]"
 let um = ${textrm"U"}^-$
@@ -233,7 +236,7 @@ Let appU1 F (f:proj(forall A:U, F A)) (A:U) : F A := proj_counit _ f x.@>"}
 
 We can exploit Coq's universe polymorphism (form version 8.5) to turn this section into a generic definition of impredicative sort. Indeed, under the polymorphic interpretation <@Type@> represents an arbitrary type, including the impredicative sort <@Prop@>, which is indeed impredicative in the above sense.
 
-{section"Generalising Geuvers's proof"}
+{section"Generalising Geuvers's proof" ~label:s_geuvers}
 
 Geuvers~{cite"Geuvers2007"} proves that an impredicative sort <@U1@> cannot be a retract of an <@U0:U1@>. His proof is made for $"<@U1@>"="<@Prop@>"$, but we can instantiate the proof of Section~{ref_ s_hurkens} to obtain the same result for any sort which is impredicative sort in the sense of Section~{ref_ s_impredicativesort}.
 
@@ -267,6 +270,122 @@ Let app0 forall u B (f:proj0 (inj0 (forall x:u, proj0 (B x)))) (x:u)
 From this, the paradox is set up, so we can deduce that every proposition of <@P:U0@> is ``inhabited'' in that $"<@El0 P@>"="<@proj0 P@>"$ is inhabited, and therefore, that every proposition of <@F:U1@> is inhabited since <@inj0 F:U0@> is ``inhabited'' in the sense of <@U0@>, {foreign"i.e."} <@proj0 (inj0 F)@> is inhabited, then <@inj0_counit@> concludes.
 
 Since <@Prop@> is an instance of the signature of Section~{ref_ s_impredicativesort}, we prove, like Geuvers, that <@Prop@> is not a retract of a proposition <@P:Prop@>.
+
+{section"Excluded middle and proof irrelevance"~label:s_emirr}
+
+  Geuvers proof, from Section~{ref_ s_geuvers}, helps proving a result, by Coquand~{cite"Coquand1989"}, that excluded middle, in an impredicative sort makes it proof irrelevant, {foreign"i.e."} every type in that sort have at most one element. This proof appear in the Coq distribution in the file {textsf"theories/Logic/ClassicalFact.v"}, presumably written by Hugo Herbelin. It uses Geuvers result and was mostly unmodified with the new proof of said result. With the characterisation of Section~{ref_ s_impredicativesort}, this could be done in an arbitrary impredicative sort, but the Coq proof is done only for the impredicative sort <@Prop@>, and we will present it that way for simplicity.
+
+  The basic idea is that excluded middle:
+  {displaybox"<@Variable em: forall A:Prop, A\/~A.@>"}
+turns the <@Prop@> sort into a boolean universe with only two elements. So assuming a proposition with two {emph"distinct"} values
+  {displaybox"<@Variable U0:Prop.
+Variables t f : U0.
+Hypothesis not_eq_t_f : t <> f.@>"}
+we can reflect <@Prop@> into <@U0@> proposition as in Section~{ref_ s_geuvers}. Where <@True@> is reflected as <@t@> and <@False@> as <@f@>, as the names suggest.
+
+  This is formalised as a retraction given by:
+  {displaybox"<@Let inj0 (A:Prop) : U0 := or_ind A (~A) U0 (fun _ => t) (fun _ => f) (em A).
+Let proj0 (x:U0) : Prop := t = x.@>"}
+  Where <@or_ind:forall A B P : Prop, (A -> P) -> (B -> P) -> A \/ B -> P@> is the elimination principle of disjunction.
+
+We are left to prove the unit and counit laws of <@inj0@> and <@proj0@> to satisfy the premisses of the paradox in Section~{ref_ s_geuvers}. The unit law is direct:
+{displaybox"<@Lemma inj0_unit : forall A:Prop, A -> proj0 (inj0 A).
+Proof.
+  intros A x. unfold proj0, inj0.
+  destruct (em A) as [h | h].
+  + reflexivity.
+  + contradiction.
+Qed.@>"}
+  The counit law is the step that makes a crucial use of the <@not_eq_t_f@> hypothesis:
+{displaybox"<@Lemma inj0_counit : forall A:Prop, proj0 (inj0 A) -> A.
+Proof.
+  intros A h. unfold proj0, inj0 in *.
+  destruct (em A) as [l | l].
+  + apply l.
+  + absurd (t=f).
+    * apply not_eq_t_f.
+    * apply h.
+Qed.@>"}
+
+  Section~{ref_ s_geuvers} then yields a contradiction. Since <@U0@> is arbitrary we have: <@forall (A:Prop) (x y:A), ~~(x=y)@>. A last application of the excluded middle yields the expected result:
+  {displaybox"<@forall (A:Prop) (x y:A), x=y@>"}
+
+{section"Variants of Prop" ~label:s_modal}
+
+  A (monadic) modality on <@Prop@> is given by a mapping:
+  {displaybox"<@Variable M : Prop -> Prop.@>"}
+  Together with the following laws:
+{displaybox"<@Hypothesis unit : forall A:Prop, A -> M A.
+Hypothesis join : forall A:Prop, M (M A) -> M A.
+Hypothesis incr : forall A B:Prop, (A->B) -> M A -> M B.@>"}
+  Such a modality is automatically equipped with a distribution property over arbitrary conjunctions:
+{displaybox"<@Lemma strength: forall A (P:A->Prop), M(forall x:A,P x) -> forall x:A,M(P x).
+Proof.
+  eauto.
+Qed.@>"}
+
+  With a modality we can define the type of modal propositions, where the <@unit@> law is actually an equivalence (modalities are closure operators, by the <@join@> law, so the type of modal propositions is the image of <@M@> up to logical equivalence).
+  {displaybox"<@Definition MProp := { P:Prop | M P -> P }.@>"}
+
+  Despite not being a sort, <@MProp@> can be seen as a subtype of <@Prop@> and, therefore, as a universe in the sense of Section~{ref_ s_uminus}.
+  {displaybox"<@Definition El (P:MProp) : Prop := proj1_sig P.@>"}
+
+Because of <@strength@>, the <@MProp@> universe is closed by products of arbitrary types. The <@Program@> keyword makes it possible to populate <@MProp@> by giving the proposition <@P@> ({emph"first projection"}) explicitly and discharging the proof that <@M P -> P@> to tactics.
+{displaybox"<@Program Definition Forall (A:Type) (F:A->MProp) : MProp :=
+  forall x:A, El (F x).
+Next Obligation.
+  intros A F h x.
+  apply strength with (x:=x) in h.
+  destruct (F x). cbn in *.
+  eauto.
+Qed.@>"}
+
+  Definitions of {um} products, small and large, for <@MProp@> follow immediately:
+  {displaybox"<@Let Forall1 (u:MProp) (F:El u -> MProp) : MProp := Forall (El u) F.
+Let ForallU1 (F:MProp->MProp) : MProp := Forall MProp F.@>"}
+  Because $"<@El (Forall A F)@>"="<@forall x:A, F@>"$, introduction, elimination and {beta}-rules for the products are immediate.
+
+  Just like in Section~{ref_ s_geuvers}, a retraction of <@MProp@> into a modal proposition can be used to trigger Hurkens's paradox. This is an example of instance of Hurkens's paradox where neither of the universes are sorts of the system.
+
+  {displaybox"<@Variable U0:MProp.
+Variable proj0 : U0 -> MProp.
+Variable inj0 : MProp -> U0.
+Hypothesis inj0_unit   : forall (A:MProp), El A -> El (proj0 (inj0 A)).
+Hypothesis inj0_counit : forall (A:MProp), El (proj0 (inj0 A)) -> El A.@>"}
+
+  Following the the proof of Section~{ref_ s_geuvers}, we conclude from this context that every modal proposition is inhabited. This is not necessarily a contradiction, as falsity need not be modal. For instance the trivial modality, whose only modal proposition in <@True@>.
+  {displaybox"<@Definition M (A:Prop) : Prop := True@>"}
+
+  A more interesting modality is, for a given <@X@>:
+  {displaybox"<@Definition M (A:Prop) : Prop := A\/X@>"}
+  for such a modality exhibiting a retraction into a modal proposition only prove <@~X@>: it is always the case that the smallest modal proposition is <@M False@>.
+
+  {section"Weak excluded middle and proof irrelevance"}
+
+  In this section we will be concerned with the double-negation modality, whose modal propositions are also called {emph"negative propositions"}:
+  {displaybox"<@Definition M (A:Prop) : Prop := ~~A@>"}
+  and will use the paradox from Section~{ref_ s_modal}, to prove that the weak principle of excluded middle
+  {displaybox"<@Hypothesis wem : forall A:Prop, ~~A \/ ~A.@>"}
+  entails a weak form of proof irrelevance. This is a new proof I added to {textsf"theories/Logic/ClassicalFact.v"} and is available from version 8.5.
+
+  Looking closely at <@wem@> it becomes clear that it claims decidability of exactly the negative propositions.
+  {displaybox"<@Remark wem' : forall A:MProp, El A \/ ~El A.@>"}
+
+  The proof, therefore, proceeds just like the  proof of Section~{ref_ s_emirr}. We begin by postulating a proposition with two proofs.
+  {displaybox"<@Variable U0:Prop.
+Variables t f : U0.
+Hypothesis not_eq_t_f : t <> f.@>"}
+
+  Notice that <@U0@> is negative, since <@U0@> has a proof, in particular <@~~U0->U0@> holds. So we only need to construct a retraction into <@U0@>. The retraction is given by <@inj0@> and <@proj0@> which are, {foreign"mutatis mutandis"} the same as in Section~{ref_ s_emirr}: double negations have to be inserted for propositions which need to be negative, and proofs of negativity have to be provided when building negative propositions.
+  {displaybox"<@Let inj0 (A:MProp) : U0 :=
+     or_ind (El A) (~El A) U0 (fun _ => t) (fun _ => f) (wem' A).
+Let proj0 (x:U0) : MProp :=
+     exist (fun P=>~~P -> P) (~~(t = x)) (fun h x => h (fun k => k x)).@>"}
+
+  The unit and counit laws follow and we eventually derive a contradiction. That is, since <@U0:Prop@> is arbitrary a proof that:
+  {displaybox"<@forall (A:Prop) (x y:A), ~~(x=y)@>"}
+
+  Contrary to to the case of (strong) excluded middle, we cannot eliminate this last double-negative. So proof irrelevance doesn't follow from weak excluded middle. However, this section proves that weak excluded middle is incompatible with any sort of proof relevance principle. In particular, in Coq lingo, weak excluded middle cannot hold in impredicative <@Set@>, that is an impredicative sort with strong elimination.
 "
 
 let packages = [
