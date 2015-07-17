@@ -33,7 +33,7 @@ As it happens, however, there is a perfectly good axiomatisation of {um} in your
 
 let axiomatisation = "{chapter"Axiomatic Hurkens's paradox" ~label:s_hurkens}
 
-The trick, so to speak, of the axiomatix presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these, commonly called {emph"large"} and {emph"small"}, together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
+The trick, so to speak, used in this axiomatic presentation of {um} is generally attributed to Martin-Löf: a universe is given by an type <@U:Type@> describing the types in the universe, and an decoding function <@El:U->Type@> describing, for each type in <@U@> the elements of that types. Sorts are to be encoded as such universes. System {um} has two of these, commonly called {emph"large"} and {emph"small"}, together with rules to combine them. Each of these rules take the form of a product formation rule (see Barendregt's presentations of {emph"pure type systems"}, formerly known as {emph"generalised type systems"}~{cite"Barendregt1991"}{cite"Barendregt" ~extra:"Section~5.2"}). Instead of the usual presentation where there is a single dependent product with a number of formation rules, we will have a distinct dependent product~--~with its own introduction rule ({lambda}-abstraction) and elimination rule (application)~--~for each of the formation rule. For each pair {lambda}-abstraction \& application, there may be a {beta}-equivalence rule, modelled as an equality; only the {beta}-equivalence rules which are effectively used in the proof are axiomatised.
 
 {section"Axiomatic {um}" ~label:s_uminus}
 
@@ -85,7 +85,7 @@ Variable lam0 : forall u B, (forall x:El0 u, El0 (B x)) -> El0 (∀₀ x:u, B x)
 Variable app0 : forall u B (f:El0 (∀₀ x:u, B x)) (x:El0 u), El0 (B x).
   Notation "f '·₀' x" := (app0 _ _ f x).@>"}
 
-The small universe <@U0@> is made impredicative by a dependent whose range is in <@U1@>. Contrary to the impredicative product of <@U1@>, the range cannot be restricted to be only <@U0@>. Here again, the {beta}-rule is not needed.
+The small universe <@U0@> is made impredicative by a dependent product whose domain is in <@U1@>. Contrary to the impredicative product of <@U1@>, the range cannot be restricted to be only <@U0@>. Here again, the {beta}-rule is not needed.
 
 {displaybox"<@Variable ForallU0 : forall u:U1, (El1 u->U0) -> U0.
   Notation "'∀₀¹' A : U , F" := (ForallU0 U (fun A => F)).
@@ -237,7 +237,7 @@ We can exploit Coq's universe polymorphism (form version 8.5) to turn this secti
 
 {section"Generalising Geuvers's proof" ~label:s_geuvers}
 
-Geuvers~{cite"Geuvers2007"} proves that an impredicative sort <@U1@> cannot be a retract of an <@U0:U1@>. His proof is made for $"<@U1@>"="<@Prop@>"$, but we can instantiate the proof of Section~{ref_ s_hurkens} to obtain the same result for any sort which is impredicative sort in the sense of Section~{ref_ s_impredicativesort}.
+Geuvers~{cite"Geuvers2007"} proves that an impredicative sort <@U1@> cannot be a retract of an <@U0:U1@>. His proof is made for $"<@U1@>"="<@Prop@>"$, but we can instantiate the proof of Section~{ref_ s_hurkens} to obtain the same result for any sort which is impredicative in the sense of Section~{ref_ s_impredicativesort}.
 
 {displaybox"<@Let      U2    := Type.
 Let      U1:U2 := Type.
@@ -272,7 +272,7 @@ Since <@Prop@> is an instance of the signature of Section~{ref_ s_impredicatives
 
 {section"Excluded middle and proof irrelevance"~label:s_emirr}
 
-  Geuvers proof, from Section~{ref_ s_geuvers}, helps proving a result, by Coquand~{cite"Coquand1989"}, that excluded middle, in an impredicative sort makes it proof irrelevant, {foreign"i.e."} every type in that sort have at most one element. This proof appear in the Coq distribution in the file {textsf"theories/Logic/ClassicalFact.v"}, presumably written by Hugo Herbelin. It uses Geuvers result and was mostly unmodified with the new proof of said result. With the characterisation of Section~{ref_ s_impredicativesort}, this could be done in an arbitrary impredicative sort, but the Coq proof is done only for the impredicative sort <@Prop@>, and we will present it that way for simplicity.
+  Geuvers's proof, from Section~{ref_ s_geuvers}, helps proving a result, by Coquand~{cite"Coquand1989"}, that excluded middle, in an impredicative sort makes it proof irrelevant, {foreign"i.e."} every type in that sort have at most one element. This proof appears in the Coq distribution in the file {textsf"theories/Logic/ClassicalFact.v"}, presumably written by Hugo Herbelin. It uses Geuvers's result and was mostly unmodified with the new proof of said result. With the characterisation of Section~{ref_ s_impredicativesort}, this could be done in an arbitrary impredicative sort, but the Coq proof is done only for the impredicative sort <@Prop@>, and we will present it that way for simplicity.
 
   The basic idea is that excluded middle:
   {displaybox"<@Variable em: forall A:Prop, A\/~A.@>"}
@@ -352,7 +352,7 @@ Variable inj0 : MProp -> U0.
 Hypothesis inj0_unit   : forall (A:MProp), El A -> El (proj0 (inj0 A)).
 Hypothesis inj0_counit : forall (A:MProp), El (proj0 (inj0 A)) -> El A.@>"}
 
-  Following the the proof of Section~{ref_ s_geuvers}, we conclude from this context that every modal proposition is inhabited. This is not necessarily a contradiction, as falsity need not be modal. For instance the trivial modality, whose only modal proposition in <@True@>.
+  Following the proof of Section~{ref_ s_geuvers}, we conclude from this context that every modal proposition is inhabited. This is not necessarily a contradiction, as falsity need not be modal. For instance the trivial modality, whose only modal proposition in <@True@>.
   {displaybox"<@Definition M (A:Prop) : Prop := True@>"}
 
   A more interesting modality is, for a given <@X@>:
